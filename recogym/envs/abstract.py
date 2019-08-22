@@ -81,7 +81,10 @@ class AbstractEnv(gym.Env, ABC):
             self.agent = self.config.agent
 
         # Setting any static parameters such as transition probabilities.
-        self.set_static_params()
+        if 'training_data' not in args:
+            self.set_static_params()
+        else:
+            self.set_static_params(self.config.training_data)
 
         # Set random seed for second time, ensures multiple epochs possible.
         self.reset_random_seed()
