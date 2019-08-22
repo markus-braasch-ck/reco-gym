@@ -5,6 +5,18 @@ app = Flask(__name__)
 api = Api(app)
 
 
+def flatList(something):
+    return [x for sublist in something for x in sublist]
+    #flat = np.array(something).flatten()
+    #print('flat: ', flat)
+    #return np.unique(flat).tolist()
+    # if isinstance(something, (list, tuple, set, range)):
+    #     for sub in something:
+    #         yield from flatten(sub)
+    # else:
+    #     yield something
+
+
 class HelloWorld(Resource):
     def __init__(self):
         import gym, recogym
@@ -25,16 +37,20 @@ class HelloWorld(Resource):
         import csv
         data = list(csv.reader(open("jameson.csv")))[1:5000]
         data = list(map(lambda x: x[0].split(' '), data))
-        life_events = list(map(lambda y: list(filter(lambda x: x < '1000', y)), data))
+        print('data: ', data[:10])
+        life_events = list(filter(lambda z: len(z) > 0, list(map(lambda y: list(filter(lambda x: x < '1000', y)), data))))
+        print('life_events before', life_events[:10])
         self.life_events = list(set(self.flatten(life_events)))
+        print('life_events after', self.life_events)
 
         print(len(data), len(data[0]))
 
         # You can overwrite environment arguments here:
         env_2_args['random_seed'] = 42
-        env_2_args['training_data'] = data
-        env_2_args['life_events'] = life_events
-        env_2_args['num_products'] = len(life_events)
+        env_2_args['training_data'] = data[1:1000]
+        env_2_args['life_events'] = self.life_events
+        env_2_args['num_products'] = len(self.life_events)
+        print('Number of products: ', env_2_args['num_products'])
 
         # Initialize the gym for the first time by calling .make() and .init_gym()
         env = gym.make('reco-gym-v2')
@@ -63,8 +79,8 @@ class HelloWorld(Resource):
         while not done:
             old_observation = observation
             action, observation, reward, done, info = env.step_offline(observation, reward, done)
-            self.agent_banditcount.train(old_observation, action, reward, done)
-            print(f"Step: {i} - Action: {action} - Observation: {observation.sessions()} - Reward: {reward}")
+            self.agent_rand.train(old_observation, action, reward, done)
+            if env.debug: print(f"Step: {i} - Action: {action} - Observation: {observation.sessions()} - Reward: {reward}")
             i += 1
 
         self.env = env
@@ -89,16 +105,16 @@ class HelloWorld(Resource):
         done = None
         actions = []
         self.env.update_data([json])
-        for _ in json:
+        for abc in json:
             action, observation, reward, done, info = self.env.step_offline(observation, reward, done)
-            # action = self.agent_banditcount.act(observation, reward, done)
+            # action = self.agent_rand.act(observation, reward, done)
             print(action)
             actions.append(action['a'])
             # observation, reward, done, info = self.env.step(action['a'])
 
         print(actions)
-        response = list(map(int, actions[-3:]))
-        # response = list(map(lambda x: self.life_events[x], actions[-3:]))
+        # response = list(map(int, actions[-3:]))
+        response = {"response": list(map(lambda x: self.life_events[x], actions[-3:]))}
         print('Sending JSON response: ', response)
         return response
 
