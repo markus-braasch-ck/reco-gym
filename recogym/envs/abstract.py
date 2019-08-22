@@ -84,7 +84,7 @@ class AbstractEnv(gym.Env, ABC):
         if 'training_data' not in args:
             self.set_static_params()
         else:
-            self.set_static_params(self.config.training_data)
+            self.set_static_params(self.config.training_data, self.config.life_events)
 
         # Set random seed for second time, ensures multiple epochs possible.
         self.reset_random_seed()

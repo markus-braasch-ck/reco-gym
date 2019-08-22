@@ -23,13 +23,18 @@ class HelloWorld(Resource):
         from recogym import Configuration
 
         import csv
-        data = list(csv.reader(open("data.csv")))
+        data = list(csv.reader(open("jameson.csv")))[1:5000]
+        data = list(map(lambda x: x[0].split(' '), data))
+        life_events = list(map(lambda y: list(filter(lambda x: x < '1000', y)), data))
+        self.life_events = list(set(self.flatten(life_events)))
+
         print(len(data), len(data[0]))
 
         # You can overwrite environment arguments here:
         env_2_args['random_seed'] = 42
         env_2_args['training_data'] = data
-        env_2_args['num_products'] = int(max(map(max, env_2_args['training_data'])).strip())
+        env_2_args['life_events'] = life_events
+        env_2_args['num_products'] = len(life_events)
 
         # Initialize the gym for the first time by calling .make() and .init_gym()
         env = gym.make('reco-gym-v2')
@@ -64,6 +69,13 @@ class HelloWorld(Resource):
 
         self.env = env
 
+    def flatten(self, something):
+        if isinstance(something, (list, tuple, set, range)):
+            for sub in something:
+                yield from self.flatten(sub)
+        else:
+            yield something
+
     def get(self):
         return {'hello': 'world'}
 
@@ -76,12 +88,17 @@ class HelloWorld(Resource):
         reward = None
         done = None
         actions = []
-        for pageId in json:
-            action = self.agent_banditcount.act(observation, reward, done)
+        self.env.update_data([json])
+        for _ in json:
+            action, observation, reward, done, info = self.env.step_offline(observation, reward, done)
+            # action = self.agent_banditcount.act(observation, reward, done)
+            print(action)
             actions.append(action['a'])
-            observation, reward, done, info = self.env.step(action['a'])
+            # observation, reward, done, info = self.env.step(action['a'])
 
-        response = list(map(int, actions))
+        print(actions)
+        response = list(map(int, actions[-3:]))
+        # response = list(map(lambda x: self.life_events[x], actions[-3:]))
         print('Sending JSON response: ', response)
         return response
 

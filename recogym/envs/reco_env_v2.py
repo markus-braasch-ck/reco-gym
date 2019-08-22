@@ -26,21 +26,31 @@ class RecoEnv2(RecoEnv1):
 
     def __init__(self):
         self.data = []
+        self.life_events = []
         self.current_data = []
         self.data_idx = 0
         self.cur_data_idx = 0
         self.product_view = 0
+        if 'debug' in env_2_args: self.debug = env_2_args['debug']
+        else: self.debug = False
         super(RecoEnv2, self).__init__()
 
-    def set_static_params(self, data = []):
+    def update_data(self, data):
         self.data = data
         self.current_data = data[0]
+        self.data_idx = 0
+        self.cur_data_idx = 0
+
+    def set_static_params(self, data = [], life_events = []):
+        self.data = data
+        self.current_data = data[0]
+        self.life_events = life_events
         super(RecoEnv2, self).set_static_params()
 
     def draw_click(self, recommendation):
-        print('Checking if click for user ', self.data_idx, ' with product ', recommendation,
+        if self.debug: print('Checking if click for user ', self.data_idx, ' with product ', recommendation,
               ' is contained in future page views: ', self.current_data[self.cur_data_idx:])
-        if recommendation in self.current_data[self.cur_data_idx:]:
+        if self.life_events[recommendation] in self.current_data[self.cur_data_idx:]:
             return 1
         else:
             return 0
