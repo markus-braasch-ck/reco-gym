@@ -1,5 +1,6 @@
 from flask import Flask, request
 from flask_restful import Resource, Api
+import torch as pt
 
 app = Flask(__name__)
 api = Api(app)
@@ -29,7 +30,7 @@ class HelloWorld(Resource):
         # env_0_args is a dictionary of default parameters (i.e. number of products)
         from envs.reco_env_v2 import env_2_args
 
-        # from recogym.agents import BanditMFSquare, bandit_mf_square_args
+        from recogym.agents import BanditMFSquare, bandit_mf_square_args
         from recogym.agents import BanditCount, bandit_count_args
         from recogym.agents import RandomAgent, random_args
         from recogym import Configuration
@@ -56,10 +57,10 @@ class HelloWorld(Resource):
         env = gym.make('reco-gym-v2')
         env.init_gym(env_2_args)
 
-        # self.agent_banditmfsquare = BanditMFSquare(Configuration({
-        #     **bandit_mf_square_args,
-        #     **env_2_args,
-        # }))
+        self.agent_banditmfsquare = BanditMFSquare(Configuration({
+            **bandit_mf_square_args,
+            **env_2_args,
+        }))
         self.agent_banditcount = BanditCount(Configuration({
             **bandit_count_args,
             **env_2_args,

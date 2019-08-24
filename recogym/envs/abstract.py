@@ -173,18 +173,20 @@ class AbstractEnv(gym.Env, ABC):
                 info
             )
 
-        assert (action_id is not None)
         # Calculate reward from action.
-        reward = self.draw_click(action_id)
+        reward = 0 if action_id is None else self.draw_click(action_id)
 
         self.update_state()
 
-        if reward == 1:
-            self.state = organic  # Clicks are followed by Organic.
+        if self.state != stop:
+            if reward == 1:
+                self.state = organic  # Clicks are followed by Organic.
 
-        # Markov state dependent logic.
-        if self.state == organic:
-            sessions = self.generate_organic_sessions()
+            # Markov state dependent logic.
+            if self.state == organic:
+                sessions = self.generate_organic_sessions()
+            else:
+                sessions = self.empty_sessions
         else:
             sessions = self.empty_sessions
 
